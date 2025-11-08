@@ -1,70 +1,95 @@
 # Facial Recognition Attendance System
 
-A full-stack mobile application that uses facial recognition for user registration and authentication. This project is built with a React Native (Expo) frontend, a Python (FastAPI) backend, and the `DeepFace` library for AI-powered face matching.
+A full-stack mobile application that uses facial recognition for user registration and authentication. This project is built with a React Native (Expo) frontend, a Python (FastAPI) backend, and the `DeepFace` library.
 
+---
 
+## 🚀 Project Overview & Architecture
 
-## Features
+This section explains the features and technical design of the project.
+
+### Features
 
 * **User Registration:** Register a new user with their name, email, and a photo.
 * **Dual Image Input:** Supports capturing a live photo with the camera or uploading from the phone's gallery.
 * **User Authentication:** Log in an existing user by verifying their face.
-* **Efficient AI Matching:** Does **not** re-calculate embeddings on every login. The system pre-calculates a user's "face fingerprint" (embedding) once during registration and stores it in the database.
-* **Scalable Backend:** The FastAPI backend handles all AI processing and database logic, keeping the mobile app fast and lightweight.
+* **Efficient AI Matching:** The system pre-calculates a user's "face fingerprint" (embedding) once during registration and stores it in the database for fast, scalable matching.
+
+<br>
+
+<details>
+  <summary><b>Click to see the full Tech Stack</b></summary>
+  
+  | Area | Technology | Purpose |
+  | :--- | :--- | :--- |
+  | **Frontend** | React Native (Expo) | Cross-platform (iOS/Android) mobile application. |
+  | | Expo Router | File-based navigation between screens. |
+  | | Expo Camera / Image Picker | For dual image inputs. |
+  | | Axios | For making HTTP requests to the backend API. |
+  | **Backend** | Python 3.11 | Core programming language. |
+  | | FastAPI | High-performance web framework for the API. |
+  | | `deepface` (with `ArcFace`) | The core AI library for face recognition. |
+  | | `numpy` | For fast mathematical comparisons of face embeddings. |
+  | **Database** | SQLite & `sqlalchemy` | For storing user info and embeddings. |
+  | **DevOps** | `ngrok` | Creates a secure tunnel for mobile testing. |
+
+</details>
+
+<br>
+
+<details>
+  <summary><b>Click to see the detailed "How It Works" flow</b></summary>
+  
+  ### 1. Registration Flow
+  1.  A user fills out their name/email and uploads a photo on the React Native app.
+  2.  The app sends this data to the `POST /register` endpoint on the FastAPI server.
+  3.  The server saves the user's name/email to the `users.db` (SQLite) database.
+  4.  The server uses `DeepFace.represent()` to generate a **face embedding** (a "math fingerprint").
+  5.  This embedding is saved in the database next to the user's name.
+
+  ### 2. Login (Recognition) Flow
+  1.  A user takes or selects a new photo on the app.
+  2.  The app sends this photo to the `POST /recognize` endpoint.
+  3.  The server generates a new embedding for this temporary photo.
+  4.  The server loops through all embeddings in the database, using `numpy` to find the one with the lowest "distance" (highest similarity).
+  5.  If a match is found, the server returns the matched user's name. Otherwise, it returns a "Not Found" error.
+
+</details>
+
+<br>
+
+<details>
+  <summary><b>Click to see the AI Model Showcase</b></summary>
+  
+  This repository includes a Jupyter Notebook, `model_showcase.ipynb`, that provides a deep dive into the AI model. It visually demonstrates:
+  1.  How an image is converted into an embedding.
+  2.  How the "distance" score is calculated for a "match" vs. a "rejection".
+</details>
 
 ---
 
-## Tech Stack
+## 🔧 Setup & Installation
 
-| Area | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Frontend** | React Native (Expo) | Cross-platform (iOS/Android) mobile application. |
-| | Expo Router | File-based navigation between screens. |
-| | Expo Camera | For live photo capture. |
-| | Expo Image Picker | For selecting photos from the gallery. |
-| | Axios | For making HTTP requests to the backend API. |
-| **Backend** | Python 3.11 | Core programming language. |
-| | FastAPI | High-performance, modern web framework for the API. |
-| | `uvicorn` | ASGI server to run the FastAPI app. |
-| | `deepface` | The core AI library for face recognition. |
-| | `ArcFace` | The specific AI model used for generating embeddings. |
-| | `numpy` | For fast mathematical comparisons of face embeddings. |
-| **Database** | SQLite | Lightweight, file-based SQL database for storing user info and embeddings. |
-| | `sqlalchemy` | Python ORM for interacting with the database. |
-| **DevOps** | `ngrok` | Creates a secure tunnel to expose the local backend server to the internet for mobile testing. |
+This section explains how to get the project running on your local machine.
 
----
+### Prerequisites
 
-## How It Works (Core Architecture)
+* Python 3.10+
+* Conda (or another Python environment manager)
+* Node.js (LTS version)
+* The **Expo Go** app on your physical phone (iOS or Android)
+* A free `ngrok` account (for the authtoken)
 
-This project uses a modern, efficient architecture for face recognition. It does **not** simply "compare pictures."
+### 1. Backend Setup
 
-### 1. Registration Flow
+```bash
+# 1. Clone the repository and navigate to the backend
+git clone [https://github.com/your-username/your-project.git](https://github.com/your-username/your-project.git)
+cd your-project/backend
 
-1.  A user fills out their name/email and uploads a photo on the React Native app.
-2.  The app sends this data to the `POST /register` endpoint on the FastAPI server.
-3.  The server saves the user's name/email to the `users.db` (SQLite) database.
-4.  The server uses `DeepFace.represent()` to analyze the photo and generate a **face embedding** (a 512-dimension vector, or "math fingerprint").
-5.  This embedding is saved as a JSON string in the database next to the user's name.
+# 2. Create and activate the Conda environment
+conda create -n face-api-env python=3.11
+conda activate face-api-env
 
-
-
-### 2. Login (Recognition) Flow
-
-1.  A user takes or selects a new photo on the app.
-2.  The app sends this photo to the `POST /recognize` endpoint.
-3.  The server generates a new embedding for this temporary photo.
-4.  The server then loops through all embeddings in the database, using `numpy` to find the one with the lowest "distance" (highest similarity) to the new embedding.
-5.  If a match is found that is below the `SIMILARITY_THRESHOLD` (0.68), the server returns the matched user's name. Otherwise, it returns a "Not Found" error.
-
----
-
-## 🔬 AI Model Showcase
-
-This repository includes a Jupyter Notebook, `model_showcase.ipynb`, that provides a deep dive into the AI model. It visually demonstrates:
-1.  How an image is converted into an embedding.
-2.  How the "distance" score is calculated.
-3.  Why two different photos of the same person have a **low distance** (a match).
-4.  Why photos of two different people have a **high distance** (a rejection).
-
----
+# 3. Install all Python packages
+pip install "fastapi[all]" sqlalchemy deepface numpy matplotlib ipykernel
