@@ -1,4 +1,4 @@
-# Facial Recognition Attendance System
+# Facial Recognition System
 
 A full-stack mobile application that uses facial recognition for user registration and authentication. This project is built with a React Native (Expo) frontend, a Python (FastAPI) backend, and the `DeepFace` library.
 
